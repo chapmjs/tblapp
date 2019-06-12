@@ -8,6 +8,25 @@
 #
 
 library(shiny)
+library(shinyauthr)
+library(shinyjs)
+
+# dataframe that holds usernames, passwords and other user data
+user_base <- data.frame(
+  user = c("user1", "user2"),
+  password = c("pass1", "pass2"), 
+  permissions = c("admin", "standard"),
+  name = c("User One", "User Two"),
+  stringsAsFactors = FALSE,
+  row.names = NULL
+)
+
+question_data <- data.frame(
+    stem = "question stem",
+    options = c("Choice A","Choice B","Choice C","Choice D")
+  )
+
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -15,36 +34,63 @@ ui <- fluidPage(
    # Application title
    titlePanel("TBL App"),
    
-   # Sidebar with a slider input for number of bins 
+   # Sidebar
    sidebarLayout(
       sidebarPanel(
-         textInput(
-           "ratsnumber",
-           "Enter the RAT id number:"
-         ),
-         textInput(
-           "usernumber",
-           "Enter your usernumber:"
-         ),
-         actionButton(
-           "actionButton",
-           "Take RAT"
-         )
+        # must turn shinyjs on
+        shinyjs::useShinyjs(),
+        # add logout button UI 
+        div(class = "pull-right", shinyauthr::logoutUI(id = "logout")),
+        # add login panel UI function
+        shinyauthr::loginUI(id = "login")
       ),
       
-      # Show a plot of the generated distribution
+      # main panel
       mainPanel(
-        radioButtons("optionChoice",
-                     "label",
-                     choices = c("Choice A", "Choice B", "Choice C", "Choice D")
+#        if (credentials()$user_auth) {
+          tabsetPanel(type = "tab",
+                      tabPanel("RAT Questions",
+                               radioButtons("question",
+                                            question_data$stem,
+                                            choices = question_data$options
+                                            )
+                      ),
+                      tabPanel("Scores")
+                      )
+#        }
         )
       )
-   )
-)
+  )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
-   
+server <- function(input, output,session) {
+  
+  # call the logout module with reactive trigger to hide/show
+  logout_init <- callModule(shinyauthr::logout, 
+                            id = "logout", 
+                            active = reactive(credentials()$user_auth))
+  
+  # call login module supplying data frame, user and password cols
+  # and reactive trigger
+  credentials <- callModule(shinyauthr::login, 
+                            id = "login", 
+                            data = user_base,
+                            user_col = user,
+                            pwd_col = password,
+                            log_out = reactive(logout_init()))
+  
+  # pulls out the user information returned from login module
+  user_data <- reactive({credentials()$info})
+  
+  
+
+  
+  
+  # output$question <- renderText({
+  #   req(credentials()$user_auth)
+  #   question_data()
+  #   
+  # })
 
 
   }
