@@ -9,8 +9,11 @@
 #
 
 library(shiny)
+# devtools::install_github("paulc91/shinyauthr")
 library(shinyauthr)
 library(shinyjs)
+library(readxl)
+library(janitor)
 
 # dataframe that holds usernames, passwords and other user data
 user_base <- data.frame(
@@ -28,6 +31,14 @@ question_data <- data.frame(
   )
 
 
+# library(readxl)
+# rats_data <- read_excel("C:/Users/chapmjs/Downloads/RATs-Chapter01-Questions_List.xlsx")
+# View(rats_data)
+
+
+rats_data <- read_excel("https://www.dropbox.com/s/sjlz6677z3v5ob7/RATs-Chapter01-Questions_List.xlsx?dl=1")
+names(rats_data) <- clean_names(rats_data,"snake")
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -39,11 +50,11 @@ ui <- fluidPage(
    sidebarLayout(
       sidebarPanel(
         # must turn shinyjs on
-        shinyjs::useShinyjs(),
+        shinyjs::useShinyjs()
         # add logout button UI 
-        div(class = "pull-right", shinyauthr::logoutUI(id = "logout")),
+        # div(class = "pull-right", shinyauthr::logoutUI(id = "logout")),
         # add login panel UI function
-        shinyauthr::loginUI(id = "login")
+        # shinyauthr::loginUI(id = "login")
       ),
       
       # main panel
